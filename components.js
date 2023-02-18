@@ -12,9 +12,9 @@ const parseNode = async function (node, rec) {
   }
 
   if (node.nodeName == "COMPONENT") {
-    const content = await fetch(
-      `/components/${node.getAttribute("from")}`
-    ).then((res) => res.text());
+    const content = await fetch(`components/${node.getAttribute("from")}`).then(
+      (res) => res.text()
+    );
     const components = [html`${content}`, ...node.children];
     components.forEach((node) => parseNode(node, true));
     node.replaceWith(html.collect(components));
