@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SC App</title>
+
+    <script src="html.js"></script>
+    <script src="firebase.js"></script>
+    <script src="limbo.js"></script>
+    <script src="components.js"></script>
+
+    <style>
+      @import url(root.css);
+
+      body {
+        grid-auto-flow: column;
+        grid-template-columns: 2fr 5fr;
+        grid-template-rows: 100%;
+      }
+
+      .center {
+        grid-template-rows: 100%;
+      }
+    </style>
+    <script>
+      const userPromise = firebase
+        .get(`/users/${localStorage.token}`)
+        .then((res) => Object.assign({ rooms: [] }, res));
+      var roomPromise;
+    </script>
+  </head>
+  <body class="center">
+    <Component from="Rooms.html" />
+    <style>
+      #messages {
+        padding: 1em;
+        color: white;
+      }
+
+      #messages > div {
+        background: linear-gradient(130deg, var(--color), var(--color-light));
+      }
+    </style>
+    <div id="messages" class="center inset">
+      <div class="rounded shadow center">
+        <p class="wrapper">You don't have any rooms selected</p>
+      </div>
+    </div>
+  </body>
+</html>

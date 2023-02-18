@@ -1,0 +1,142 @@
+<style>
+  form {
+    background: linear-gradient(70deg, var(--color), var(--color-light));
+    width: 100%;
+    height: 100%;
+
+    grid-template-rows: 4em 5fr 3fr;
+  }
+
+  form input[type="radio"] {
+    display: none;
+  }
+
+  nav {
+    color: white;
+    text-align: center;
+
+    grid-auto-flow: column;
+  }
+
+  nav > label {
+    position: relative;
+    cursor: pointer;
+  }
+
+  nav > input:checked + label::after {
+    content: "";
+    position: absolute;
+
+    width: 5vw;
+    height: 3px;
+    background: white;
+
+    border-radius: 5px;
+    bottom: 10px;
+
+    left: 50%;
+    translate: -50%;
+  }
+
+  form #content {
+    gap: 1em;
+    text-align: center;
+    width: 70%;
+    color: white;
+  }
+
+  form #content input {
+    padding: 1em;
+    outline: none;
+    border: none;
+    color: var(--color);
+  }
+
+  form button[type="submit"] {
+    padding: 1em 5em;
+    background: white;
+    color: var(--color);
+    border: none;
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  async function submitted(ev) {
+    const users = Object.entries((await firebase.get("users")) ?? {});
+
+    if (ev.method.value == "signup") {
+      if (users.some(([, user]) => user.username == ev.username.value)) {
+        alert("There is already a user with that username");
+        return;
+      }
+
+      const { name: token } = await firebase.post("users", {
+        username: ev.username.value,
+        password: ev.password.value,
+        rooms: [],
+      });
+      localStorage.setItem("token", token);
+      location = "/app.html";
+      return;
+    }
+
+    if (ev.method.value == "login") {
+      const [token] =
+        users.find(
+          ([, user]) =>
+            user.username == ev.username.value &&
+            user.password == ev.password.value
+        ) ?? [];
+      if (!token) {
+        alert("Incorrect username or password");
+        return;
+      }
+
+      localStorage.setItem("token", token);
+      location = "/app.html";
+      return;
+    }
+  }
+</script>
+
+<form
+  onsubmit="submitted(this);event.preventDefault()"
+  class="rounded center shadow"
+>
+  <nav class="center">
+    <input type="radio" name="method" value="signup" id="signup" checked />
+    <label for="signup" class="center">SignUp</label>
+    <input type="radio" name="method" value="login" id="login" />
+    <label for="login" class="center">Login</label>
+  </nav>
+
+  <div class="wrapper center" id="content">
+    <h1>SignUp</h1>
+    <script>
+      [...document.querySelectorAll("nav label")].forEach(
+        (label) =>
+          (label.onclick = () => {
+            document.querySelector("#content h1").innerHTML = label.innerHTML;
+          })
+      );
+    </script>
+    <input
+      class="inset rounded"
+      type="text"
+      name="username"
+      placeholder="Username"
+    />
+    <input
+      class="inset rounded"
+      type="text"
+      name="password"
+      type="password"
+      placeholder="Password"
+    />
+  </div>
+
+  <div class="wrapper">
+    <button type="submit" class="rounded">Continue</button>
+  </div>
+</form>

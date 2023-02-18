@@ -1,0 +1,133 @@
+<style>
+  #room-content {
+    display: grid;
+    grid-template-rows: 2em 1fr 4em;
+  }
+
+  #room-content div:first-child div {
+    display: flex;
+    gap: 1em;
+  }
+
+  #room-content div:first-child div button {
+    width: 2em;
+    height: 2em;
+    border: 1px solid white;
+    color: white;
+    background: none;
+    cursor: pointer;
+  }
+
+  #input-wrapper {
+    padding: 10px;
+  }
+
+  #input-wrapper input {
+    border: none;
+    outline: none;
+    color: var(--color);
+    padding: 0 1em;
+    background: linear-gradient(190deg, #fffe, #fffa);
+  }
+
+  #stream {
+    display: flex;
+    flex-direction: column-reverse;
+    overflow-y: scroll;
+    height: 100%;
+  }
+
+  #stream > p {
+    padding: 5px 1em;
+    margin: 3px 1em;
+    background: linear-gradient(190deg, #fffe, #fffa);
+    width: fit-content;
+    border-radius: 9999px;
+    color: var(--color);
+  }
+
+  #stream > p.me {
+    align-self: flex-end;
+    background: none;
+    border: 1px solid white;
+    color: white;
+  }
+</style>
+
+<script>
+  let lastID;
+
+  function createMessageComponent(message, text) {
+    const content = `<p class="${
+      message.author == localStorage.token ? "me" : "other"
+    }">${message.content}</p>${
+      lastID == (lastID = message.author) ? "" : "<br/>"
+    }`;
+    return text ? content : html`${content}`;
+  }
+
+  async function message(input) {
+    if (!input.value) return;
+    await firebase.post(`room/${(await roomPromise).id}/messages`, {
+      content: input.value,
+      author: localStorage.token,
+    });
+    input.value = "";
+  }
+
+  async function startMessageStream() {
+    const streamView = document.querySelector("#stream");
+    new EventSource(
+      `https://static-chat-default-rtdb.firebaseio.com/room/${
+        (await roomPromise).id
+      }/messages.json`
+    ).addEventListener("put", ({ data }) => {
+      const { path, data: message } = JSON.parse(data);
+      if (path == "/") return;
+      streamView.prepend(createMessageComponent(message));
+    });
+  }
+
+  async function addUser() {
+    const username = prompt("Who do you want to invite?");
+    const [token, user] = Object.entries(await firebase.get("/users")).find(
+      ([, user]) => user.username == username
+    );
+    if (!user) {
+      console.error("Username not found");
+      return;
+    }
+
+    await firebase.put(`/users/${token}/rooms`, [
+      ...((await firebase.get(`/users/${token}/rooms`)) ?? []),
+      (await roomPromise).id,
+    ]);
+    alert(`${username} was added to the room`);
+  }
+</script>
+
+<div id="room-content">
+  <script>
+    limbo(async () => {
+      const room = Object.assign({ messages: {} }, await roomPromise);
+      setTimeout(startMessageStream);
+      return html`
+        <div class="center">
+          <div class="wrapper">
+            <p class="center">${room.name}</p>
+            <button class="wrapper rounded" onclick="addUser()">+</button>
+          </div>
+        </div>
+        <div id="stream">
+          ${Object.entries(room.messages)
+            .reverse()
+            .map(([, message]) => createMessageComponent(message, true))
+            .join("")}
+        </div>
+      `;
+    });
+  </script>
+  <div id="input-wrapper" class="inset center">
+    <input type="text" class="rounded inset" onchange="message(this)" />
+  </div>
+</div>

@@ -1,0 +1,76 @@
+<style>
+  #room-selection .wrapper {
+    width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1em;
+  }
+
+  #room-selection button {
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+
+    background: none;
+    outline: none;
+    border: none;
+    border-radius: 9999px;
+
+    color: white;
+    font-size: 1.5em;
+    background: linear-gradient(130deg, var(--color), var(--color-light));
+  }
+
+  #room-selection button:last-child {
+    background: none;
+    color: var(--color);
+    border: 2px solid var(--color);
+  }
+</style>
+
+<script>
+  function createRoomIcon(room) {
+    return html`<button onclick="openRoom('${room.id}')">
+      ${room.name.match(/(?<=^| )(.)/g).join("")}
+    </button>`;
+  }
+
+  async function createRoom(button) {
+    const name = prompt("New room name");
+    const { name: id } = await firebase.post("room", { name });
+    await firebase.put(`users/${localStorage.token}/rooms`, [
+      ...(await userPromise).rooms,
+      id,
+    ]);
+    button.parentElement.insertBefore(createRoomIcon({ id, name }), button);
+  }
+
+  function openRoom(id) {
+    roomPromise = firebase
+      .get(`room/${id}`)
+      .then((res) => Object.assign({ id }, res));
+    document.querySelector(
+      "#messages > div"
+    ).innerHTML = `<Component from="Messages.html" />`;
+  }
+</script>
+
+<div id="room-selection" class="center">
+  <div class="wrapper center inset">
+    <script>
+      limbo(async () =>
+        html.collect(
+          await Promise.all(
+            (
+              await userPromise
+            ).rooms.map(async (id) =>
+              createRoomIcon(
+                Object.assign({ id }, await firebase.get(`room/${id}`))
+              )
+            )
+          )
+        )
+      );
+    </script>
+    <button onclick="createRoom(this)">+</button>
+  </div>
+</div>

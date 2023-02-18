@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Static Chat</title>
+
+    <script src="html.js"></script>
+    <script src="firebase.js"></script>
+    <script src="components.js"></script>
+
+    <style>
+      @import url(root.css);
+
+      body {
+        grid-auto-flow: column;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      body > * {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body class="center">
+    <style>
+      main {
+        color: var(--color);
+      }
+    </style>
+    <main class="center inset">
+      <div class="wrapper">
+        <h1>Static Chat App</h1>
+        <p>🔮 Chat app made with no backend</p>
+      </div>
+      <div class="wrapper">
+        <a href="https://github.com/ephf/static-chat" target="_blank">
+          <img src="https://img.icons8.com/ios-glyphs/100/null/github.png" />
+        </a>
+      </div>
+    </main>
+    <div class="wrapper inset">
+      <Component from="Login.html" />
+    </div>
+  </body>
+</html>
